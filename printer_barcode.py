@@ -1,79 +1,51 @@
+import os, sys
+from PIL import Image
+import zpl
+import win32print
 
 
+def generate_lable(text,project_id,unit_number, project_abriviation):
+    l = zpl.Label(100,60)
+    height = 2
+    l.origin(0,2)
+    l.write_text(text,char_height=10, char_width=8, line_width=60, justification='C')
+    l.endorigin()
+
+    qr_code_text = 'QA,%s,%s,%s' % (text,unit_number,project_id)
+
+    print(qr_code_text)
+
+    l.origin(2,15)
+    l.write_barcode(height=70,barcode_type='Q',mode='2',mask='1',magnification=10)
+    l.write_text(qr_code_text)
+    l.endorigin()
+
+    l.origin(15,15)
+    l.write_text('Unit: %s' % (unit_number),char_height=8, char_width=8, line_width=60, justification='C')
+    l.endorigin()
+
+    l.origin(13, 26)
+    l.write_text(project_abriviation, char_height=6, char_width=6, line_width=60, justification='C')
+    l.endorigin()
+
+    print_job(l.dumpZPL())
 
 
+def print_job(zpl):
+    printer = win32print.OpenPrinter('ZDesigner GX420d')
+    job = win32print.StartDocPrinter(printer, 1, ('test of raw data', None, "RAW"))
 
+    print(zpl)
 
+    # string= '''
+    # ^XA
+    # ^FO0,24^A0N,120,96^FB720,1,0,C,0^FDStart^FS
+    # ^FO0,180^BQN,2,10,Q,7^FS
+    # ^XZ
+    # '''
 
+    raw_data = bytes(zpl, 'utf-8')
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# from io import BytesIO
-#
-# import barcode
-# import win32print
-# import os,sys
-#
-# from barcode import Code128, EAN13
-# from barcode.writer import ImageWriter
-#
-# import pyqrcode
-# import png
-# from pyqrcode import QRCode
-# from zebra import Zebra
-#
-# def create_qrcode(text):
-#
-#     # url = pyqrcode.create(text)
-#     # url.png('test',scale=2)
-#     zebra_print()
-#
-#
-# def zebra_print():
-#     z = Zebra()
-#     print('Printer queues found:', z.getqueues())
-#     z.setqueue('ZDesigner GX420d')
-#     # z.autosense()
-#     z.setup(direct_thermal=True,label_height=(104,2),label_width=66)
-#     z.print_config_label()
-
-    # print(z.setup())
-    # print(z.)
-    # z.setup(direct_thermal=True, label_height=(406, 32), label_width=609)  # 3" x 2" direct thermal label
-    # z.store_graphic('test', 'test.png')
-    # label = """
-    # N
-    #
-    # A50,150,0,4,1,1,N,"Example 4
-    #
-    # """
-    # z.output("A50,150,0,4,1,1,N,'Example 4'")
-    # print(z.output("A50,150,0,4,1,1,N,'Example 4'"))
-
-# def print_proccess(text_to_print):
-#     printer = win32print.OpenPrinter('ZDesigner GX420d')
-#     job = win32print.StartDocPrinter(printer,1,('test of raw data',None,"TEXT"))
-#
-#     raw_data = bytes(text_to_print,'utf-8')
-#
-#
-#     win32print.StartPagePrinter(printer)
-#     win32print.WritePrinter(printer,'Test')
-#     win32print.EndPagePrinter(printer)
+    win32print.StartPagePrinter(printer)
+    win32print.WritePrinter(printer, raw_data)
+    win32print.EndPagePrinter(printer)
