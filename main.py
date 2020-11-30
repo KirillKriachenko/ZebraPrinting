@@ -1,5 +1,78 @@
 # This is a sample Python script.
-import printer_barcode
+from gui import main_form
+import serial, sys
+import getpass
+from odoo_api import la_odoo_api
+from scannercommands import createskid
+
+# USER_UID = ''
+USER = ''
+
+SERIAL_PORT = serial.Serial('COM4',9600,timeout=0.5)
+
+def authentification():
+    email = input("Email: ")
+    password = getpass.getpass()
+
+    check_user = la_odoo_api.check_login_user(email,password)
+    if check_user:
+        global USER_LOGED_IN
+        # global USER_UID
+        global USER
+
+        USER_LOGED_IN = True
+
+        # USER_UID = check_user
+        USER = check_user
+
+    else:
+        print('USER %s NOT FOUND' % email)
+        print('Please try again')
+        authentification()
+
+# def get_from_scanner(command):
+#     if command == 'CreateSkid':
+#         global LISTEN_FOR_COMMAND
+#         LISTEN_FOR_COMMAND = False
+
+# def get_from_scanner(barcode,command):
+#     if command == 'add':
+#         BOX_BARCODE_LIST.append(barcode)
+
+if __name__ == '__main__':
+    global GET_COMMAND
+    GET_COMMAND = True
+    print('Please enter your login infomation: ')
+    authentification()
+    while GET_COMMAND == True:
+        if SERIAL_PORT.in_waiting > 0:
+            serialString = SERIAL_PORT.readline()
+
+            command = str(serialString)
+            command = command[2:len(command) - 3]
+            print(command)
+
+            message = 'ESC[8qESC[3qESC[9q'.encode('ASCII')
+            SERIAL_PORT.write(message)
+
+            if command == 'CreateSkid':
+
+                GET_COMMAND = False
+                createskid.create_skid(SERIAL_PORT,USER)
+
+
+
+    # while USER_LOGED_IN == True:
+    #     if (serialPort.in_waiting > 0):
+    #         serialString = serialPort.readline()
+    #
+    #         command = str(serialString)
+    #
+    #         print(command)
+
+
+
+
 #
 #
 # def print_hi(name):
@@ -8,59 +81,29 @@ import printer_barcode
 
 
 # Press the green button in the gutter to run the script.
-if __name__ == '__main__':
 
-    printer_barcode.generate_lable('Start',9,1506,'KGW3')
-
-    # l = zpl.Label(100, 60)
-    # height = 0
-    # l.origin(0, 0)
-    # l.write_text("Problem?", char_height=10, char_width=8, line_width=60, justification='C')
-    # l.endorigin()
-    #
-    # height += 13
-    # image_width = 5
-    # l.origin((l.width - image_width) / 2, height)
-    # image_height = l.write_graphic(
-    #     Image.open('test-barcode.png'),
-    #     # Image.open(os.path.join(os.path.dirname(zpl.__file__), 'test-barcode.png')),
-    #     image_width)
-    # l.endorigin()
-    #
-    # height += image_height + 5
-    # l.origin(22, height)
-    # l.write_barcode(height=70, barcode_type='U', check_digit='Y')
-    # l.write_text('07000002198')
-    # l.endorigin()
-    #
-    # height += 20
-    # l.origin(0, height)
-    # l.write_text('Happy Troloween!', char_height=5, char_width=4, line_width=60,
-    #              justification='C')
-    # l.endorigin()
-    #
-    # print(l.dumpZPL())
-    # l.preview()
-    #
-    # print(type(l.dumpZPL()))
-    #
-    # zpl = """
-    # ^XA
-    # ^FO150,40^BY3
-    # ^BCN,110,Y,N,N
-    # ^FD123456^FS
-    # ^FO0,0^A0N,120,96^FB720,1,0,C,0^FDProblem?
-    # ^XZ
-    # """
-    #
-    # print(type(zpl))
+    # main_form.create_gui()
 
 
-    #
-    #
 
-    # print(raw_data)
+    # filebuffer = dev[0].interfaces()[0].endpoints()[0]
+    # interface_number = dev[0].interfaces()[0].bInterfaceNumber
+    # dev.reset()
     #
+    # if dev.is_kernel_driver_active(interface_number):
+    #     dev.detach_kernel_driver(interface_number)
+    #
+    # dev.set_configuration()
+    # endpoint_address = filebuffer.bEndpointAddress
+    #
+    # reader = dev.read(endpoint_address, 1024)
+    #
+    # print(len(reader))
+    # print(reader)
+    #
+    # dev.attach_kernel_driver(interface_number)
+    # main_form.create_gui()
+
 
 
 
