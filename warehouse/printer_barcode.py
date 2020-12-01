@@ -15,7 +15,7 @@ def generate_lable(text,project_id,unit_number, project_abriviation):
 
     print(qr_code_text)
 
-    l.origin(2,15)
+    l.origin(2,17)
     l.write_barcode(height=70,barcode_type='Q',mode='2',mask='1',magnification=10)
     l.write_text(qr_code_text)
     l.endorigin()

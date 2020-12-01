@@ -1,3 +1,4 @@
+from scannercommands import record_skid
 
 def create_skid(serial_port,user):
     skid_barcode_list = []
@@ -20,6 +21,9 @@ def create_skid(serial_port,user):
                 CONTINUE_SCANING = False
             print(serialString)
 
-    print(skid_barcode_list)
-
+    record_skid.start_threading(skid_barcode_list,OBJECT_IDS,user)
+    create_skid(serial_port,user)
+    #TODO: Create function to check what was included to skid and color finished module in odoo.
+    #TODO: Navigate back to Read new Barcode to create new Barcode skid
+    #TODO: Check if this already was scanned and EDIT on change.
 

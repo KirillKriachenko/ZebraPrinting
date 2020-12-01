@@ -1,19 +1,23 @@
 from xmlrpc import client as xmlrpclib
 import json
 
-
-LA_ODOO_URL = 'https://odoo.livingart.ca:8443'
-LA_ODOO_DB = 'odoo.livingart.ca'
+LA_ODOO_URL = 'http://localhost:8070'
+# LA_ODOO_URL = 'https://odoo.livingart.ca:8443'
+LA_ODOO_DB = 'LivingartDB'
+# LA_ODOO_DB = 'odoo.livingart.ca'
 common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(LA_ODOO_URL))
 models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(LA_ODOO_URL))
 
-def check_login_user(username,password):
+
+def check_login_user(username, password):
     uid = common.login(LA_ODOO_DB, username, password)
     if uid != False:
         print('User found')
-        return User(username,password,uid)
+        return User(username, password, uid)
     else:
         return False
+
+
 # def find_skid_ids(uid,password,skid_id):
 #     print(skid_id)
 #     find_skid = models.execute(LA_ODOO_DB,uid,password,'la.deliveryunits','search_count',
@@ -23,7 +27,7 @@ def check_login_user(username,password):
 #         print('TRUE')
 
 class User:
-    def __init__(self,email,password, uid):
+    def __init__(self, email, password, uid):
         self.common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(LA_ODOO_URL))
         self.models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(LA_ODOO_URL))
 
@@ -31,7 +35,7 @@ class User:
         self.password = password
         self.uid = common.authenticate(LA_ODOO_DB, self.email, self.password, {})
 
-    def find_skid_ids(self,skid_id):
+    def find_skid_ids(self, skid_id):
         print('SKID_ID ', skid_id)
 
         try:
@@ -41,9 +45,63 @@ class User:
         except:
             print('Somesing went wrong')
 
+    def find_delivery_data(self, skid_id):
+        print('SKID ID', skid_id)
+        try:
+            find_delivery_record = self.models.execute_kw(LA_ODOO_DB, self.uid, self.password,
+                                                          'la.deliveryunits', 'search_read',
+                                                          [[['id', '=', skid_id]]],
+                                                          {'fields': ['id', 'project_ids', 'unit_ids'], 'limit': 1})
+            print(find_delivery_record)
+            return find_delivery_record
+        except:
+            print('Something get wrong - delivery Not found')
+            print(find_delivery_record)
 
+    def create_skid_record(self, skid_name, deliveryunit_ids):
+        try:
+            print('SKID_ID ', deliveryunit_ids)
+            find_skid = self.models.execute_kw(LA_ODOO_DB, self.uid, self.password, 'la.skiddata', 'search_read',
+                                               [[['delivery_unit_ids.id', '=', deliveryunit_ids]]],
+                                               {'fields': ['id'], 'limit': 1})
+            print('FIND_SKID', find_skid)
 
+            if find_skid == []:
+                find_skid = self.models.execute_kw(LA_ODOO_DB, self.uid, self.password, 'la.skiddata', 'create',
+                                                   [{
+                                                       'scid_name': skid_name,
+                                                       'delivery_unit_ids': deliveryunit_ids
+                                                   }])
+                update_deliveryunit = self.models.execute_kw(LA_ODOO_DB, self.uid, self.password, 'la.deliveryunits', 'write', [[deliveryunit_ids], {
+                    'skid_ids': find_skid
+                }])
+                return find_skid
+            else:
+                print(find_skid[0].get('id'))
+                return find_skid[0].get('id')
+            # create_skid =
+        except:
+            print('Something went wrong - from create skid')
 
+    def create_barcode_boxes_records(self, barcode, skid_ids):
+        print('SKID_IDS ', skid_ids)
+        try:
+            find_product_ids = self.models.execute_kw(LA_ODOO_DB, self.uid, self.password,
+                                                      'barcode.product', 'search_read',
+                                                      [[['barcode', '=', barcode]]],
+                                                      {'fields': ['product_ids'], 'limit': 1})
+            print(find_product_ids)
+            print('----------------------')
+            print(find_product_ids[0].get('product_ids')[0])
+            if find_product_ids != []:
+                record = self.models.execute_kw(LA_ODOO_DB, self.uid, self.password, 'la.boxdata', 'create',
+                                                [{
+                                                    'barcode': barcode,
+                                                    'product_ids': find_product_ids[0].get('product_ids')[0],
+                                                    'skid_ids': skid_ids
+                                                }])
+        except:
+            print('GOPA')
 
 # common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(url))
 # models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url))
@@ -97,7 +155,7 @@ class User:
 #
 #     connection.close()
 
-    # print(barcode)
+# print(barcode)
 
 # print(select_list)
 
