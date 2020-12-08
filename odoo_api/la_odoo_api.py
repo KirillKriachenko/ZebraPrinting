@@ -12,7 +12,8 @@ models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(LA_ODOO_URL))
 def check_login_user(username, password):
     uid = common.login(LA_ODOO_DB, username, password)
     if uid != False:
-        print('User found')
+        print('Loggin SUCCESS.')
+        print('Please scann command...')
         return User(username, password, uid)
     else:
         return False
@@ -36,63 +37,63 @@ class User:
         self.uid = common.authenticate(LA_ODOO_DB, self.email, self.password, {})
 
     def find_skid_ids(self, skid_id):
-        print('SKID_ID ', skid_id)
-
         try:
             find_skid = self.models.execute_kw(LA_ODOO_DB, self.uid, self.password, 'la.deliveryunits', 'search_count',
                                                [[['id', '=', skid_id]]])
             return True
         except:
-            print('Somesing went wrong')
+            print('Skid code not found')
+            return False
+
 
     def find_delivery_data(self, skid_id):
-        print('SKID ID', skid_id)
+        # print('SKID ID', skid_id)
         try:
             find_delivery_record = self.models.execute_kw(LA_ODOO_DB, self.uid, self.password,
                                                           'la.deliveryunits', 'search_read',
                                                           [[['id', '=', skid_id]]],
                                                           {'fields': ['id', 'project_ids', 'unit_ids'], 'limit': 1})
-            print(find_delivery_record)
+            # print(find_delivery_record)
             return find_delivery_record
         except:
-            print('Something get wrong - delivery Not found')
-            print(find_delivery_record)
+            print('Delivery data not found.')
+            return False
+            # print(find_delivery_record)
 
     def create_skid_record(self, skid_name, deliveryunit_ids):
         try:
-            print('SKID_ID ', deliveryunit_ids)
+            # print('SKID_ID ', deliveryunit_ids)
             find_skid = self.models.execute_kw(LA_ODOO_DB, self.uid, self.password, 'la.skiddata', 'search_read',
                                                [[['delivery_unit_ids.id', '=', deliveryunit_ids]]],
                                                {'fields': ['id'], 'limit': 1})
-            print('FIND_SKID', find_skid)
+            # print('FIND_SKID', find_skid)
 
-            if find_skid == []:
+            if not find_skid:
                 find_skid = self.models.execute_kw(LA_ODOO_DB, self.uid, self.password, 'la.skiddata', 'create',
                                                    [{
                                                        'scid_name': skid_name,
                                                        'delivery_unit_ids': deliveryunit_ids
                                                    }])
-                update_deliveryunit = self.models.execute_kw(LA_ODOO_DB, self.uid, self.password, 'la.deliveryunits', 'write', [[deliveryunit_ids], {
-                    'skid_ids': find_skid
-                }])
+                # print('CREATED SKID ', find_skid)
+
                 return find_skid
             else:
-                print(find_skid[0].get('id'))
+                # print(find_skid[0].get('id'))
                 return find_skid[0].get('id')
             # create_skid =
         except:
-            print('Something went wrong - from create skid')
+            print('Something went wrong - create_skid_record')
 
     def create_barcode_boxes_records(self, barcode, skid_ids):
-        print('SKID_IDS ', skid_ids)
+        # print('SKID_IDS ', skid_ids)
         try:
             find_product_ids = self.models.execute_kw(LA_ODOO_DB, self.uid, self.password,
                                                       'barcode.product', 'search_read',
                                                       [[['barcode', '=', barcode]]],
                                                       {'fields': ['product_ids'], 'limit': 1})
-            print(find_product_ids)
-            print('----------------------')
-            print(find_product_ids[0].get('product_ids')[0])
+            # print(find_product_ids)
+            # print('----------------------')
+            # print(find_product_ids[0].get('product_ids')[0])
             if find_product_ids != []:
                 record = self.models.execute_kw(LA_ODOO_DB, self.uid, self.password, 'la.boxdata', 'create',
                                                 [{
@@ -101,8 +102,32 @@ class User:
                                                     'skid_ids': skid_ids
                                                 }])
         except:
-            print('GOPA')
+            print('Something get wrong - create_barcode_boxes_records')
 
+    def assigne_skid_to_unit(self,deliveryunit_id,skid_id):
+        # print('DELIVERY Unit ', deliveryunit_id)
+        # print('Skid id ', skid_id)
+        try:
+            update_deliveryunit = self.models.execute_kw(LA_ODOO_DB, self.uid, self.password, 'la.deliveryunits', 'write', [[deliveryunit_id], {
+                'skid_ids': skid_id
+            }])
+        except:
+            print('Skid not assigned - assigne_skid_to_unit')
+
+
+    def check_skid_for_completion(self,skid_id):
+        try:
+            if_test = self.models.execute_kw(LA_ODOO_DB,self.uid,self.password,'la.skiddata','test_function',[skid_id])
+        except:
+            print('Something get wrong - check_skid_for_completion')
+
+
+
+        # try:
+        #
+        #     print(check)
+        # except:
+        #     print('problems')
 # common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(url))
 # models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url))
 #
