@@ -79,14 +79,29 @@ class User:
                 return find_skid[0].get('id')
         except:
             print('Create skid faild')
+
+
     def record_barcode(self,barcode, skid_ids):
     # print('SKID_IDS ', skid_ids)
         try:
             find_product_ids = self.models.execute_kw(LA_ODOO_DB, self.uid, self.password,
                                                       'barcode.product', 'search_read',
                                                       [[['barcode', '=', barcode]]],
-                                                      {'fields': ['product_ids'], 'limit': 1})
+                                                      {'fields': ['product_ids']})
+            #
+            # find_product_ids = self.models.execute_kw(LA_ODOO_DB, self.uid, self.password,
+            #                                           'barcode.product', 'search_read',
+            #                                           [[['barcode', '=', barcode]]])
+
             print(find_product_ids)
+            # for found_product in find_product_ids:
+            #     print(found_product[0].get('product_ids')[0])
+            #     check_if_active = self.models.execute_kw(LA_ODOO_DB, self.uid, self.password,
+            #                                               'product.product','search_read',
+            #                                               [[['active','=',True],['id','=',found_product[0].get('product_ids')[0]]]])
+            #     print(check_if_active)
+            last_id = len(find_product_ids)-1
+            print(find_product_ids[last_id].get('product_ids')[0])
             if find_product_ids != []:
                 record = self.models.execute_kw(LA_ODOO_DB, self.uid, self.password, 'la.boxdata', 'create',
                                                 [{

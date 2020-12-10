@@ -20,11 +20,9 @@ def create_skid(serial_port, user):
             serialString = serial_port.read_all()
             string = str(serialString)
             string = string[2:len(string) - 3]
-            print(string.rstrip("\n"))
             if "\n" in string:
                 string = string.rstrip("\n")
             print(string)
-
             if OBJECT_IDS == '':
                 if user.find_skid_ids(string) == True:
                     OBJECT_IDS = string
@@ -39,8 +37,6 @@ def create_skid(serial_port, user):
 
             elif string != OBJECT_IDS:
                 skid_barcode_list.append(string)
-                print(string)
-                print(type(string))
                 command_excepted = bytes([0x1B, 0x5B, 0x31, 0x71, 0x0D])
                 serial_port.write(command_excepted)
 
