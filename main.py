@@ -7,6 +7,7 @@ import getpass
 from odoo_api import la_odoo_api
 from scannercommands import createskid
 
+
 # SERIAL_PORT = serial.Serial('COM4', 115200, timeout=0.5)
 
 
